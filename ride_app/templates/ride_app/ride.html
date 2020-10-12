@@ -1,0 +1,60 @@
+{% extends "Ride_app/base.html" %}
+
+{% block content %}
+
+<h3>{{ride.departure}}-{{ride.destination}} by {{ride.created_by.first_name}} {{ride.created_by.last_name}}</h3>
+<div id="map1"></div>
+<div id="map2"></div>
+<p hidden id='dep'>{{ride.departure}}</p>
+<p hidden id='dest'>{{ride.destination}}</p>
+<p>Travel Date: {{ride.date}}</p>
+<p>Departure Time: {{ride.time}}
+<h3>Other members joining the Ride:</h3>
+{% for user in joiners %}
+<p>{{user.first_name}} {{user.last_name}}</p>
+{% endfor %}
+
+
+
+
+<script>
+    function initMap() {
+        geocoder = new google.maps.Geocoder();
+        var dep = document.getElementById('dep').innerHTML;
+        var dest = document.getElementById('dest').innerHTML;
+        geocoder.geocode({ 'address': dep }, function (results, status) {
+            if (status == 'OK') {
+                //map.setCenter(results[0].geometry.location);
+                var map1 = new google.maps.Map(
+                    document.getElementById('map1'), { zoom: 8, center: results[0].geometry.location });
+                var marker1 = new google.maps.Marker({
+                    map: map1,
+                    position: results[0].geometry.location
+                });
+            } else {
+                alert('Geocode was not successful for the following reason: ' + status);
+            }
+        });
+        geocoder.geocode({ 'address': dest }, function (results, status) {
+            if (status == 'OK') {
+                //map.setCenter(results[0].geometry.location);
+                var map2 = new google.maps.Map(
+                    document.getElementById('map2'), { zoom: 8, center: results[0].geometry.location });
+                var marker2 = new google.maps.Marker({
+                    map: map2,
+                    position: results[0].geometry.location
+                });
+            } else {
+                alert('Geocode was not successful for the following reason: ' + status);
+            }
+        });
+    }
+
+</script>
+
+<script defer
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB_mbSbZbcDFPPm0B-wJoeTs_KVOL8Vx2A&callback=initMap">
+    </script>
+
+
+{% endblock %}

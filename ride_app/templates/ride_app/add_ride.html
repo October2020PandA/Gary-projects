@@ -1,0 +1,13 @@
+{% extends "ride_app/base.html" %}
+
+{% block content %}
+<form method="post">
+    {% csrf_token %}
+    {{form.as_p}}
+    <div class="form-group">
+        <button class="btn btn-outline-info" type="submit">Create Ride</button>
+    </div>
+</form>
+
+
+{% endblock %}

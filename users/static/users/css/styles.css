@@ -1,0 +1,16 @@
+.container-fluid{
+    background-color: lightgray;
+    border:1px solid black;
+}
+
+.form{
+    padding:25px;
+    display:inline-block;
+    vertical-align: top;
+    max-width: 450px;
+    margin:35px;
+}
+
+#logo{
+    margin:25px;
+}

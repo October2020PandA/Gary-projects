@@ -1,0 +1,208 @@
+{% extends "ride_app/base.html" %}
+{% block header %}
+<a href="{% url 'ride_app:create_ride' %}" id="create_ride"><button type="button" class="btn btn-info">Offer a
+        Ride</button></a>
+{% endblock %}
+{% block content %}
+<h3>Welcome back to RidePooler {{request.user.first_name}}</h3>
+
+<h4>Your Planned Rides</h4>
+<table class="table table-striped table-bordered">
+    <thead>
+        <tr>
+            <th>Ride Date</th>
+            <th>Departure</th>
+            <th>Destination</th>
+            <th>Time</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for ride in rides %}
+        {% if ride.created_by == request.user  or request.user in ride.joined_by.all %}
+        <tr>
+            <td><a href="{% url 'ride_app:ride' ride.id %}">{{ride.date|date:"M d, Y"}}</a></td>
+            <td>{{ride.departure}} </td>
+            <td>{{ride.destination}}</td>
+            <td>{{ride.time}}</td>
+            <td>{% if ride.created_by != request.user %}
+                <a href="{% url 'ride_app:cancel_ride' ride.id %}"><button type="button"
+                        class="btn btn-info">Cancel</button> </a> {% endif %}
+                {% if ride.created_by == request.user %}
+                <a href="{% url 'ride_app:update_ride' ride.id %}"><button type="button"
+                        class="btn btn-info">Update</button></a>
+                <a href="{% url 'ride_app:delete_ride' ride.id %}"><button type="button"
+                        class="btn btn-info">Delete</button></a>
+                {% endif %}
+                {% if ride.created_by != request.user %}
+                <button type="button" class="btn btn-info" onclick="openForm()">Payment (optional)</button>
+
+                {% endif %}
+            </td>
+        </tr>
+        {% endif %}
+        {% endfor %}
+    </tbody>
+
+</table>
+<div class="form-popup" id="myForm">
+    <form action="{% url 'ride_app:charge' %}" class="form-container" method="post" id="payment-form">
+        {% csrf_token %}
+        <h3>Would you like to contribute towards gas/tolls?</h3>
+
+        <label for="email">Your email address:</label>
+        <input type="text" name="email">
+        <label for="amount">Amount ($):</label>
+        <input type="text" name="amount" id="amount">
+        <div class="form-row">
+            <label for="card-element">
+                Credit or debit card
+            </label>
+            <div id="card-element">
+                <!-- A Stripe Element will be inserted here. -->
+            </div>
+
+            <!-- Used to display form errors. -->
+            <div id="card-errors" role="alert"></div>
+        </div>
+        <button type="submit" class="btn btn-info">Submit Payment</button>
+        <button type="button" class="btn btn-info" onclick="closeForm()">Close</button>
+    </form>
+</div>
+<hr>
+
+<h4>Available Rides:</h4>
+<input type="text" id="myInput" onkeyup="myFunction()" placeholder="Search rides by destination.."
+    title="Type in a name">
+<table class="table table-striped table-bordered" id="otherUsers">
+    <thead>
+        <tr>
+            <th>Date</th>
+            <th>Driver</th>
+            <th>Departure</th>
+            <th>Destination</th>
+            <th>Time</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for plan in other_users %}
+        {% if this_user not in plan.joined_by.all %}
+
+
+        <tr>
+            <td>{{plan.date|date:"M d, Y"}}</td>
+            <td>{{plan.created_by.first_name}}</td>
+            <td>{{plan.departure}}</td>
+            <td>{{plan.destination}}</td>
+            <td>{{plan.time}}</td>
+            <td><a href="{% url 'ride_app:join_ride' plan.id %}"><button type="button"
+                        class="btn btn-info">Join</button></a></td>
+        </tr>
+        {% endif %}
+        {% endfor %}
+    </tbody>
+</table>
+
+<script>
+    function openForm() {
+        document.getElementById("myForm").style.display = "block";
+    }
+
+    function closeForm() {
+        document.getElementById("myForm").style.display = "none";
+    }
+</script>
+<script>
+    function myFunction() {
+        var input, filter, table, tr, td, i, txtValue;
+        input = document.getElementById("myInput");
+        filter = input.value.toUpperCase();
+        table = document.getElementById("otherUsers");
+        tr = table.getElementsByTagName("tr");
+        for (i = 0; i < tr.length; i++) {
+            td = tr[i].getElementsByTagName("td")[3];
+            if (td) {
+                txtValue = td.textContent || td.innerText;
+                if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                    tr[i].style.display = "";
+                } else {
+                    tr[i].style.display = "none";
+                }
+            }
+        }
+    }
+</script>
+<script src="https://js.stripe.com/v3/"></script>
+<script>
+    // Create a Stripe client.
+    var stripe = Stripe('pk_test_51HZrGTHxxr6MhWwJZyYB3VJgyJFnume6zOLr3KjAnJ7gormmsZ0cjPFWJQISwQbDQQG9KVrbcLYYkYMryF7nhkYy00xss4Fd7R');
+
+    // Create an instance of Elements.
+    var elements = stripe.elements();
+
+    // Custom styling can be passed to options when creating an Element.
+    // (Note that this demo uses a wider set of styles than the guide below.)
+    var style = {
+        base: {
+            color: '#32325d',
+            fontFamily: '"Helvetica Neue", Helvetica, sans-serif',
+            fontSmoothing: 'antialiased',
+            fontSize: '16px',
+            '::placeholder': {
+                color: '#aab7c4'
+            }
+        },
+        invalid: {
+            color: '#fa755a',
+            iconColor: '#fa755a'
+        }
+    };
+
+    // Create an instance of the card Element.
+    var card = elements.create('card', { style: style });
+
+    // Add an instance of the card Element into the `card-element` <div>.
+    card.mount('#card-element');
+    // Handle real-time validation errors from the card Element.
+    card.on('change', function (event) {
+        var displayError = document.getElementById('card-errors');
+        if (event.error) {
+            displayError.textContent = event.error.message;
+        } else {
+            displayError.textContent = '';
+        }
+    });
+
+    // Handle form submission.
+    var form = document.getElementById('payment-form');
+    form.addEventListener('submit', function (event) {
+        event.preventDefault();
+
+        stripe.createToken(card).then(function (result) {
+            if (result.error) {
+                // Inform the user if there was an error.
+                var errorElement = document.getElementById('card-errors');
+                errorElement.textContent = result.error.message;
+            } else {
+                // Send the token to your server.
+                stripeTokenHandler(result.token);
+            }
+        });
+    });
+
+    // Submit the form with the token ID.
+    function stripeTokenHandler(token) {
+        // Insert the token ID into the form so it gets submitted to the server
+        var form = document.getElementById('payment-form');
+        var hiddenInput = document.createElement('input');
+        hiddenInput.setAttribute('type', 'hidden');
+        hiddenInput.setAttribute('name', 'stripeToken');
+        hiddenInput.setAttribute('value', token.id);
+        form.appendChild(hiddenInput);
+
+        // Submit the form
+        form.submit();
+    }
+</script>
+{% endblock %}
