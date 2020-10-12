@@ -52,14 +52,11 @@
                 <button class="btn btn-outline-info" type="submit" name="login">Log In</button>
             </div>
 
-            <button type="button" class="fb btn"><i class="fab fa-facebook-f pr-1"></i>
-                <a href="{% url 'social:begin' 'facebook' %}">Login with Facebook
-                </a>
-            </button>
-            <button type="button" class="btn btn-gplus"><i class="fab fa-google-plus-g pr-1"></i>
-                <a href="{% url 'social:begin' 'google-oauth2' %}">Login with Google
-                </a>
-            </button>
+            <a href="{% url 'social:begin' 'facebook' %}"><img src="static/users/fb-btn.png" width=150px>
+            </a>
+
+            <a href="{% url 'social:begin' 'google-oauth2' %}"><img src="static/users/google-btn.png" width=150px>
+            </a>
 
 
         </form>
